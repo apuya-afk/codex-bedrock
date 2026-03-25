@@ -8,7 +8,8 @@ import logging
 import re
 import time
 from abc import ABC
-from typing import AsyncIterable, Iterable, Literal
+from collections.abc import AsyncIterable, Iterable
+from typing import Literal
 
 import boto3
 import numpy as np
@@ -18,6 +19,14 @@ from botocore.config import Config
 from fastapi import HTTPException
 from starlette.concurrency import run_in_threadpool
 
+from codex_bedrock.config import (
+    AWS_REGION,
+    DEBUG,
+    DEFAULT_MODEL,
+    ENABLE_APPLICATION_INFERENCE_PROFILES,
+    ENABLE_CROSS_REGION_INFERENCE,
+    ENABLE_PROMPT_CACHING,
+)
 from codex_bedrock.models.base import BaseChatModel, BaseEmbeddingsModel
 from codex_bedrock.schema import (
     AssistantMessage,
@@ -28,7 +37,6 @@ from codex_bedrock.schema import (
     Choice,
     ChoiceDelta,
     CompletionTokensDetails,
-    DeveloperMessage,
     Embedding,
     EmbeddingsRequest,
     EmbeddingsResponse,
@@ -41,19 +49,9 @@ from codex_bedrock.schema import (
     ResponseFunction,
     TextContent,
     ToolCall,
-    ToolContent,
     ToolMessage,
     Usage,
     UserMessage,
-)
-from codex_bedrock.config import (
-    AWS_REGION,
-    DEBUG,
-    DEFAULT_MODEL,
-    ENABLE_CROSS_REGION_INFERENCE,
-    ENABLE_APPLICATION_INFERENCE_PROFILES,
-    ENABLE_PROMPT_CACHING,
-    
 )
 
 logger = logging.getLogger(__name__)
@@ -236,8 +234,10 @@ class BedrockModel(BaseChatModel):
                     f"the profile exists in your AWS account."
                 )
             else:
-                error = f"Unsupported model {chat_request.model}, please use models API to get a list of supported models"
-            logger.error("Unsupported model: %s", chat_request.model)
+                error = (
+                    f"Unsupported model {chat_request.model}, "
+                    "please use models API to get a list of supported models"
+                )
 
         # Validate profile has resolvable underlying model
         if not error and chat_request.model in profile_metadata:
@@ -741,7 +741,10 @@ class BedrockModel(BaseChatModel):
                     "content": [{"text": "Please continue your response from where you left off."}]
                 })
                 if DEBUG:
-                    logger.info(f"Added continuation prompt for {chat_request.model} - conversation ended with assistant message")
+                    logger.info(
+                        "Added continuation prompt for %s - conversation ended with assistant message",
+                        chat_request.model,
+                    )
 
         # Add cachePoint to messages if enabled and supported
         if chat_request and reformatted_messages:
@@ -1460,7 +1463,10 @@ class NovaEmbeddingsModel(BedrockEmbeddingsModel):
                 else:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Unsupported input item type: {type(item).__name__}. Expected str, int, or list of ints.",
+                        detail=(
+                            f"Unsupported input item type: {type(item).__name__}. "
+                            "Expected str, int, or list of ints."
+                        ),
                     )
         else:
             raise HTTPException(status_code=400, detail="Unsupported input type")

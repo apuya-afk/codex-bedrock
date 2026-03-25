@@ -9,7 +9,11 @@ from codex_bedrock.schema import ChatRequest, ChatResponse, ChatStreamResponse, 
 router = APIRouter(prefix="/chat", dependencies=[Depends(require_api_key)])
 
 
-@router.post("/completions", response_model=ChatResponse | ChatStreamResponse | Error, response_model_exclude_unset=True)
+@router.post(
+    "/completions",
+    response_model=ChatResponse | ChatStreamResponse | Error,
+    response_model_exclude_unset=True,
+)
 async def chat_completions(chat_request: ChatRequest):
     chat_request.model = MODEL_MAP.get(chat_request.model, chat_request.model)
     model = BedrockModel()

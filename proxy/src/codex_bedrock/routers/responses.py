@@ -1,12 +1,13 @@
 import json
 import time
 import uuid
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 
 from fastapi import APIRouter, Body, Depends, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 
 from codex_bedrock.auth import require_api_key
+from codex_bedrock.config import DEFAULT_MODEL, MODEL_MAP
 from codex_bedrock.models.bedrock import BedrockModel
 from codex_bedrock.schema import (
     AssistantMessage,
@@ -19,7 +20,6 @@ from codex_bedrock.schema import (
     ToolMessage,
     UserMessage,
 )
-from codex_bedrock.config import DEFAULT_MODEL, MODEL_MAP
 
 router = APIRouter(prefix="")
 

@@ -1,5 +1,4 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
 import { CONFIG_FILE, CODEX_BEDROCK_DIR } from './paths.js';
 
 export interface Config {

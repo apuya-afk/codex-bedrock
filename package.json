@@ -2,15 +2,24 @@
   "name": "codex-bedrock",
   "version": "0.1.0",
   "description": "Use Codex CLI with AWS Bedrock + SSO — zero OpenAI account required",
-  "keywords": ["codex", "aws", "bedrock", "claude", "anthropic", "sso", "ai", "cli"],
+  "keywords": [
+    "codex",
+    "aws",
+    "bedrock",
+    "claude",
+    "anthropic",
+    "sso",
+    "ai",
+    "cli"
+  ],
   "homepage": "https://github.com/apuya-afk/codex-bedrock",
   "repository": {
     "type": "git",
-    "url": "https://github.com/apuya-afk/codex-bedrock.git"
+    "url": "git+https://github.com/apuya-afk/codex-bedrock.git"
   },
   "license": "MIT",
   "bin": {
-    "codex-bedrock": "./dist/index.js"
+    "codex-bedrock": "dist/index.js"
   },
   "files": [
     "dist",
@@ -26,15 +35,16 @@
     "prepublishOnly": "npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
-    "commander": "^12.0.0",
-    "inquirer": "^9.0.0",
+    "@iarna/toml": "^2.2.5",
     "chalk": "^5.0.0",
-    "ora": "^8.0.0",
+    "commander": "^12.0.0",
     "execa": "^9.0.0",
     "find-up": "^7.0.0",
-    "@iarna/toml": "^2.2.5"
+    "inquirer": "^9.0.0",
+    "ora": "^8.0.0"
   },
   "devDependencies": {
+    "@types/inquirer": "^9.0.9",
     "@types/node": "^22.0.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",

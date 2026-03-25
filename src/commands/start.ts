@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { execa } from 'execa';
 import { writeFileSync } from 'fs';
-import { VENV_DIR, PID_FILE, LOG_FILE } from '../utils/paths.js';
+import { VENV_DIR, PID_FILE } from '../utils/paths.js';
 import { loadConfig } from '../utils/config.js';
 import { buildEnv } from '../utils/proxy.js';
 import { isSsoSessionValid, ssoLogin } from '../utils/aws.js';
@@ -37,7 +37,8 @@ export async function start(options: StartOptions): Promise<void> {
   try {
     await proc;
   } catch (err: unknown) {
-    if ((err as NodeJS.ErrnoException).signal !== 'SIGTERM') {
+    const signal = (err as Record<string, unknown>)['signal'];
+    if (signal !== 'SIGTERM') {
       console.error(chalk.red('Proxy exited with error:'), err);
       process.exit(1);
     }

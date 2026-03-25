@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { execa } from 'execa';
 import { PID_FILE, VENV_DIR } from './paths.js';
 import { Config } from './config.js';

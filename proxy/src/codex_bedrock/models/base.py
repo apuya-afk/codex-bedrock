@@ -1,7 +1,7 @@
 import time
 import uuid
 from abc import ABC, abstractmethod
-from typing import AsyncIterable
+from collections.abc import AsyncIterable
 
 from codex_bedrock.schema import (
     ChatRequest,
@@ -29,7 +29,6 @@ class BaseChatModel(ABC):
 
     @staticmethod
     def stream_response_to_bytes(response: ChatStreamResponse | Error | None = None) -> bytes:
-        import json
 
         if isinstance(response, Error):
             data = response.model_dump_json()
@@ -40,7 +39,7 @@ class BaseChatModel(ABC):
             data = response.model_dump_json(exclude_unset=True)
         else:
             data = "[DONE]"
-        return f"data: {data}\n\n".encode("utf-8")
+        return f"data: {data}\n\n".encode()
 
 
 class BaseEmbeddingsModel(ABC):

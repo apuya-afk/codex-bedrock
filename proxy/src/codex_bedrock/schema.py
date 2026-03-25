@@ -1,5 +1,6 @@
 import time
-from typing import Iterable, Literal
+from collections.abc import Iterable
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -180,6 +181,24 @@ class EmbeddingsRequest(BaseModel):
     encoding_format: Literal["float", "base64"] = "float"
     dimensions: int | None = None
     user: str | None = None
+
+
+class Embedding(BaseModel):
+    object: Literal["embedding"] = "embedding"
+    embedding: list[float] | bytes
+    index: int
+
+
+class EmbeddingsUsage(BaseModel):
+    prompt_tokens: int
+    total_tokens: int
+
+
+class EmbeddingsResponse(BaseModel):
+    object: Literal["list"] = "list"
+    data: list[Embedding]
+    model: str
+    usage: EmbeddingsUsage
 
 
 class ErrorMessage(BaseModel):

@@ -23,7 +23,7 @@ codex-bedrock-proxy = "codex_bedrock.main:main"
 packages = ["src/codex_bedrock"]
 
 [tool.ruff]
-line-length = 100
+line-length = 120
 target-version = "py311"
 
 [tool.ruff.lint]
