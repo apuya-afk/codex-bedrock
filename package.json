@@ -18,6 +18,7 @@
     "url": "git+https://github.com/apuya-afk/codex-bedrock.git"
   },
   "license": "MIT",
+  "type": "module",
   "bin": {
     "codex-bedrock": "dist/index.js"
   },
