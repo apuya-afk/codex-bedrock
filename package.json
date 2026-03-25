@@ -1,6 +1,6 @@
 {
   "name": "codex-bedrock",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Use Codex CLI with AWS Bedrock + SSO — zero OpenAI account required",
   "keywords": [
     "codex",
