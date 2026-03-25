@@ -19,9 +19,7 @@ MODEL_MAP: dict[str, str] = {
     "gpt-5.1": os.environ.get("CODEX_BEDROCK_MODEL_FAST", "us.anthropic.claude-haiku-4-5-20251001-v1:0"),
 }
 
-ENABLE_CROSS_REGION_INFERENCE = (
-    os.environ.get("ENABLE_CROSS_REGION_INFERENCE", "true").lower() == "true"
-)
+ENABLE_CROSS_REGION_INFERENCE = os.environ.get("ENABLE_CROSS_REGION_INFERENCE", "true").lower() == "true"
 ENABLE_APPLICATION_INFERENCE_PROFILES = (
     os.environ.get("ENABLE_APPLICATION_INFERENCE_PROFILES", "true").lower() == "true"
 )

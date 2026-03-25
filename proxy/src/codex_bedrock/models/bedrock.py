@@ -57,14 +57,14 @@ from codex_bedrock.schema import (
 logger = logging.getLogger(__name__)
 
 config = Config(
-            connect_timeout=60,      # Connection timeout: 60 seconds
-            read_timeout=900,        # Read timeout: 15 minutes (suitable for long streaming responses)
-            retries={
-                'max_attempts': 8,   # Maximum retry attempts
-                'mode': 'adaptive'   # Adaptive retry mode
-            },
-            max_pool_connections=50  # Maximum connection pool size
-        )
+    connect_timeout=60,  # Connection timeout: 60 seconds
+    read_timeout=900,  # Read timeout: 15 minutes (suitable for long streaming responses)
+    retries={
+        "max_attempts": 8,  # Maximum retry attempts
+        "mode": "adaptive",  # Adaptive retry mode
+    },
+    max_pool_connections=50,  # Maximum connection pool size
+)
 
 bedrock_runtime = boto3.client(
     service_name="bedrock-runtime",
@@ -122,7 +122,7 @@ def list_bedrock_models() -> dict:
     try:
         if ENABLE_CROSS_REGION_INFERENCE:
             # List system defined inference profile IDs and store underlying model mapping
-            paginator = bedrock_client.get_paginator('list_inference_profiles')
+            paginator = bedrock_client.get_paginator("list_inference_profiles")
             for page in paginator.paginate(maxResults=1000, typeEquals="SYSTEM_DEFINED"):
                 for profile in page["inferenceProfileSummaries"]:
                     profile_id = profile.get("inferenceProfileId")
@@ -135,7 +135,7 @@ def list_bedrock_models() -> dict:
                         model_arn = models[0].get("modelArn", "")
                         if model_arn:
                             # Extract foundation model ID from ARN
-                            model_id = model_arn.split('/')[-1]
+                            model_id = model_arn.split("/")[-1]
                             profile_metadata[profile_id] = {
                                 "underlying_model_id": model_id,
                                 "profile_type": "SYSTEM_DEFINED",
@@ -143,7 +143,7 @@ def list_bedrock_models() -> dict:
 
         if ENABLE_APPLICATION_INFERENCE_PROFILES:
             # List application defined inference profile IDs and create mapping
-            paginator = bedrock_client.get_paginator('list_inference_profiles')
+            paginator = bedrock_client.get_paginator("list_inference_profiles")
             for page in paginator.paginate(maxResults=1000, typeEquals="APPLICATION"):
                 for profile in page["inferenceProfileSummaries"]:
                     try:
@@ -164,7 +164,7 @@ def list_bedrock_models() -> dict:
                             continue
 
                         # Extract model ID from ARN (works for both foundation models and cross-region profiles)
-                        model_id = model_arn.split('/')[-1] if '/' in model_arn else model_arn
+                        model_id = model_arn.split("/")[-1] if "/" in model_arn else model_arn
 
                         # Store in unified profile metadata for feature detection
                         profile_metadata[profile_arn] = {
@@ -235,8 +235,7 @@ class BedrockModel(BaseChatModel):
                 )
             else:
                 error = (
-                    f"Unsupported model {chat_request.model}, "
-                    "please use models API to get a list of supported models"
+                    f"Unsupported model {chat_request.model}, please use models API to get a list of supported models"
                 )
 
         # Validate profile has resolvable underlying model
@@ -345,9 +344,7 @@ class BedrockModel(BaseChatModel):
             if chat_request.model in profile_metadata:
                 resolved = self._resolve_to_foundation_model(chat_request.model)
                 profile_type = profile_metadata[chat_request.model].get("profile_type", "UNKNOWN")
-                logger.info(
-                    f"Profile resolution: {chat_request.model} ({profile_type}) → {resolved}"
-                )
+                logger.info(f"Profile resolution: {chat_request.model} ({profile_type}) → {resolved}")
 
         # convert OpenAI chat request to Bedrock SDK request
         args = self._parse_request(chat_request)
@@ -357,9 +354,7 @@ class BedrockModel(BaseChatModel):
         try:
             if stream:
                 # Run the blocking boto3 call in a thread pool
-                response = await run_in_threadpool(
-                    bedrock_runtime.converse_stream, **args
-                )
+                response = await run_in_threadpool(bedrock_runtime.converse_stream, **args)
             else:
                 # Run the blocking boto3 call in a thread pool
                 response = await run_in_threadpool(bedrock_runtime.converse, **args)
@@ -549,9 +544,7 @@ class BedrockModel(BaseChatModel):
                 messages.append(
                     {
                         "role": message.role,
-                        "content": self._parse_content_parts(
-                            message, chat_request.model
-                        ),
+                        "content": self._parse_content_parts(message, chat_request.model),
                     }
                 )
             elif isinstance(message, AssistantMessage):
@@ -569,9 +562,7 @@ class BedrockModel(BaseChatModel):
                     messages.append(
                         {
                             "role": message.role,
-                            "content": self._parse_content_parts(
-                                message, chat_request.model
-                            ),
+                            "content": self._parse_content_parts(message, chat_request.model),
                         }
                     )
                 if message.tool_calls:
@@ -640,7 +631,7 @@ class BedrockModel(BaseChatModel):
                             item_text = item["text"]
                             if isinstance(item_text, str):
                                 # Try to parse as JSON if it looks like JSON
-                                if item_text.strip().startswith('{') and item_text.strip().endswith('}'):
+                                if item_text.strip().startswith("{") and item_text.strip().endswith("}"):
                                     try:
                                         parsed_json = json.loads(item_text)
                                         # Convert JSON object to readable text
@@ -655,7 +646,7 @@ class BedrockModel(BaseChatModel):
                         else:
                             # Handle other dict formats - convert to JSON string
                             text_parts.append(json.dumps(item, indent=2))
-                    elif hasattr(item, 'text'):
+                    elif hasattr(item, "text"):
                         # Handle ToolContent objects
                         text_parts.append(item.text)
                     else:
@@ -706,9 +697,7 @@ class BedrockModel(BaseChatModel):
             # If the next role is different from the previous message, add the previous role's messages to the list
             if next_role != current_role:
                 if current_content:
-                    reformatted_messages.append(
-                        {"role": current_role, "content": current_content}
-                    )
+                    reformatted_messages.append({"role": current_role, "content": current_content})
                 # Switch to the new role
                 current_role = next_role
                 current_content = []
@@ -721,9 +710,7 @@ class BedrockModel(BaseChatModel):
 
         # Add the last role's messages to the list
         if current_content:
-            reformatted_messages.append(
-                {"role": current_role, "content": current_content}
-            )
+            reformatted_messages.append({"role": current_role, "content": current_content})
 
         # Bedrock Converse API requires conversations to end with a user message.
         # Some models don't support "assistant message prefill".
@@ -736,10 +723,9 @@ class BedrockModel(BaseChatModel):
 
             # Check if model is in the no-prefill list
             if any(no_prefill_model in model_lower for no_prefill_model in NO_ASSISTANT_PREFILL_MODELS):
-                reformatted_messages.append({
-                    "role": "user",
-                    "content": [{"text": "Please continue your response from where you left off."}]
-                })
+                reformatted_messages.append(
+                    {"role": "user", "content": [{"text": "Please continue your response from where you left off."}]}
+                )
                 if DEBUG:
                     logger.info(
                         "Added continuation prompt for %s - conversation ended with assistant message",
@@ -831,9 +817,7 @@ class BedrockModel(BaseChatModel):
                     if chat_request.max_completion_tokens
                     else chat_request.max_tokens
                 )
-                budget_tokens = self._calc_budget_tokens(
-                    max_tokens, chat_request.reasoning_effort
-                )
+                budget_tokens = self._calc_budget_tokens(max_tokens, chat_request.reasoning_effort)
                 inference_config["maxTokens"] = max_tokens
                 # unset topP - Not supported
                 inference_config.pop("topP", None)
@@ -857,9 +841,7 @@ class BedrockModel(BaseChatModel):
         if chat_request.tools:
             tool_config = {"tools": [self._convert_tool_spec(t.function) for t in chat_request.tools]}
 
-            if chat_request.tool_choice and not chat_request.model.startswith(
-                "meta.llama3-1-"
-            ):
+            if chat_request.tool_choice and not chat_request.model.startswith("meta.llama3-1-"):
                 if isinstance(chat_request.tool_choice, str):
                     # auto (default) is mapped to {"auto" : {}}
                     # required is mapped to {"any" : {}}
@@ -876,10 +858,7 @@ class BedrockModel(BaseChatModel):
         # Add additional fields to enable extend thinking or other model-specific features
         if chat_request.extra_body:
             # Filter out prompt_caching (our control field, not for Bedrock)
-            additional_fields = {
-                k: v for k, v in chat_request.extra_body.items()
-                if k != "prompt_caching"
-            }
+            additional_fields = {k: v for k, v in chat_request.extra_body.items() if k != "prompt_caching"}
 
             if additional_fields:
                 # Merge with existing additionalModelRequestFields (e.g., from reasoning_effort)
@@ -948,15 +927,11 @@ class BedrockModel(BaseChatModel):
             message.content = ""
             for c in content:
                 if "reasoningContent" in c:
-                    message.reasoning_content = c["reasoningContent"][
-                        "reasoningText"
-                    ].get("text", "")
+                    message.reasoning_content = c["reasoningContent"]["reasoningText"].get("text", "")
                 elif "text" in c:
                     message.content = c["text"]
                 else:
-                    logger.warning(
-                        "Unknown tag in message content " + ",".join(c.keys())
-                    )
+                    logger.warning("Unknown tag in message content " + ",".join(c.keys()))
             if message.reasoning_content:
                 message.content = f"<think>{message.reasoning_content}</think>{message.content}"
                 message.reasoning_content = None
@@ -1004,9 +979,7 @@ class BedrockModel(BaseChatModel):
         response.created = int(time.time())
         return response
 
-    def _create_response_stream(
-        self, model_id: str, message_id: str, chunk: dict
-    ) -> ChatStreamResponse | None:
+    def _create_response_stream(self, model_id: str, message_id: str, chunk: dict) -> ChatStreamResponse | None:
         """Parsing the Bedrock stream response chunk.
 
         Ref: https://docs.aws.amazon.com/bedrock/latest/userguide/conversation-inference.html#message-inference-examples
@@ -1182,9 +1155,7 @@ class BedrockModel(BaseChatModel):
             image_content = response.content
             return image_content, content_type
         else:
-            raise HTTPException(
-                status_code=500, detail="Unable to access the image url"
-            )
+            raise HTTPException(status_code=500, detail="Unable to access the image url")
 
     def _parse_content_parts(
         self,
@@ -1244,9 +1215,7 @@ class BedrockModel(BaseChatModel):
             }
         }
 
-    def _calc_budget_tokens(
-        self, max_tokens: int, reasoning_effort: Literal["low", "medium", "high"]
-    ) -> int:
+    def _calc_budget_tokens(self, max_tokens: int, reasoning_effort: Literal["low", "medium", "high"]) -> int:
         # Helper function to calculate budget_tokens based on the max_tokens.
         # Ratio for efforts:  Low - 30%, medium - 60%, High: Max token - 1
         # Note that The minimum budget_tokens is 1,024 tokens so far.
@@ -1277,9 +1246,7 @@ class BedrockModel(BaseChatModel):
                 "complete": "stop",
                 "content_filtered": "content_filter",
             }
-            return finish_reason_mapping.get(
-                finish_reason.lower(), finish_reason.lower()
-            )
+            return finish_reason_mapping.get(finish_reason.lower(), finish_reason.lower())
         return None
 
 
@@ -1370,9 +1337,7 @@ class CohereEmbeddingsModel(BedrockEmbeddingsModel):
         return args
 
     def embed(self, embeddings_request: EmbeddingsRequest) -> EmbeddingsResponse:
-        response = self._invoke_model(
-            args=self._parse_args(embeddings_request), model_id=embeddings_request.model
-        )
+        response = self._invoke_model(args=self._parse_args(embeddings_request), model_id=embeddings_request.model)
         response_body = json.loads(response.get("body").read())
         if DEBUG:
             logger.info("Bedrock response body: " + str(response_body))
@@ -1388,15 +1353,10 @@ class TitanEmbeddingsModel(BedrockEmbeddingsModel):
     def _parse_args(self, embeddings_request: EmbeddingsRequest) -> dict:
         if isinstance(embeddings_request.input, str):
             input_text = embeddings_request.input
-        elif (
-            isinstance(embeddings_request.input, list)
-            and len(embeddings_request.input) == 1
-        ):
+        elif isinstance(embeddings_request.input, list) and len(embeddings_request.input) == 1:
             input_text = embeddings_request.input[0]
         else:
-            raise ValueError(
-                "Amazon Titan Embeddings models support only single strings as input."
-            )
+            raise ValueError("Amazon Titan Embeddings models support only single strings as input.")
         args = {
             "inputText": input_text,
             # Note: inputImage is not supported!
@@ -1410,9 +1370,7 @@ class TitanEmbeddingsModel(BedrockEmbeddingsModel):
         return args
 
     def embed(self, embeddings_request: EmbeddingsRequest) -> EmbeddingsResponse:
-        response = self._invoke_model(
-            args=self._parse_args(embeddings_request), model_id=embeddings_request.model
-        )
+        response = self._invoke_model(args=self._parse_args(embeddings_request), model_id=embeddings_request.model)
         response_body = json.loads(response.get("body").read())
         if DEBUG:
             logger.info("Bedrock response body: " + str(response_body))
@@ -1464,8 +1422,7 @@ class NovaEmbeddingsModel(BedrockEmbeddingsModel):
                     raise HTTPException(
                         status_code=400,
                         detail=(
-                            f"Unsupported input item type: {type(item).__name__}. "
-                            "Expected str, int, or list of ints."
+                            f"Unsupported input item type: {type(item).__name__}. Expected str, int, or list of ints."
                         ),
                     )
         else:

@@ -61,11 +61,13 @@ def _translate_input(input_data, instructions=None) -> list:
             output = item.get("output", "")
             if not isinstance(output, str):
                 output = json.dumps(output)
-            messages.append(ToolMessage(
-                role="tool",
-                content=output,
-                tool_call_id=item.get("call_id") or item.get("id") or "",
-            ))
+            messages.append(
+                ToolMessage(
+                    role="tool",
+                    content=output,
+                    tool_call_id=item.get("call_id") or item.get("id") or "",
+                )
+            )
             continue
 
         content = item.get("content", "")
@@ -90,14 +92,16 @@ def _translate_input(input_data, instructions=None) -> list:
                         text_parts.append(c.get("text", ""))
                     elif ctype == "tool_use":
                         args = c.get("input", {})
-                        tool_calls.append(ToolCall(
-                            id=c.get("id", f"call_{uuid.uuid4().hex[:8]}"),
-                            type="function",
-                            function=ResponseFunction(
-                                name=c.get("name", ""),
-                                arguments=json.dumps(args) if isinstance(args, dict) else args,
-                            ),
-                        ))
+                        tool_calls.append(
+                            ToolCall(
+                                id=c.get("id", f"call_{uuid.uuid4().hex[:8]}"),
+                                type="function",
+                                function=ResponseFunction(
+                                    name=c.get("name", ""),
+                                    arguments=json.dumps(args) if isinstance(args, dict) else args,
+                                ),
+                            )
+                        )
                 text = " ".join(text_parts) if text_parts else None
                 tool_calls = tool_calls if tool_calls else None
             else:
@@ -138,14 +142,16 @@ def _translate_tools(tools_data) -> list[Tool] | None:
     for t in tools_data:
         func = t.get("function", t)
         if t.get("type") == "function" or "name" in func:
-            result.append(Tool(
-                type="function",
-                function=Function(
-                    name=func.get("name", ""),
-                    description=func.get("description"),
-                    parameters=_sanitize_schema(func.get("parameters", {})),
-                ),
-            ))
+            result.append(
+                Tool(
+                    type="function",
+                    function=Function(
+                        name=func.get("name", ""),
+                        description=func.get("description"),
+                        parameters=_sanitize_schema(func.get("parameters", {})),
+                    ),
+                )
+            )
     return result or None
 
 
@@ -164,17 +170,20 @@ async def _stream_responses(
 
     created_at = int(time.time())
 
-    yield _sse("response.created", {
-        "type": "response.created",
-        "response": {
-            "id": response_id,
-            "object": "response",
-            "created_at": created_at,
-            "status": "in_progress",
-            "model": model_name,
-            "output": [],
+    yield _sse(
+        "response.created",
+        {
+            "type": "response.created",
+            "response": {
+                "id": response_id,
+                "object": "response",
+                "created_at": created_at,
+                "status": "in_progress",
+                "model": model_name,
+                "output": [],
+            },
         },
-    })
+    )
 
     # Tracking state
     next_output_index = 0
@@ -209,34 +218,43 @@ async def _stream_responses(
             if text_output_index is None:
                 text_output_index = next_output_index
                 next_output_index += 1
-                yield _sse("response.output_item.added", {
-                    "type": "response.output_item.added",
-                    "output_index": text_output_index,
-                    "item": {
-                        "type": "message",
-                        "id": msg_id,
-                        "status": "in_progress",
-                        "role": "assistant",
-                        "content": [],
+                yield _sse(
+                    "response.output_item.added",
+                    {
+                        "type": "response.output_item.added",
+                        "output_index": text_output_index,
+                        "item": {
+                            "type": "message",
+                            "id": msg_id,
+                            "status": "in_progress",
+                            "role": "assistant",
+                            "content": [],
+                        },
                     },
-                })
-                yield _sse("response.content_part.added", {
-                    "type": "response.content_part.added",
-                    "item_id": msg_id,
-                    "output_index": text_output_index,
-                    "content_index": content_index,
-                    "part": {"type": "output_text", "text": ""},
-                })
+                )
+                yield _sse(
+                    "response.content_part.added",
+                    {
+                        "type": "response.content_part.added",
+                        "item_id": msg_id,
+                        "output_index": text_output_index,
+                        "content_index": content_index,
+                        "part": {"type": "output_text", "text": ""},
+                    },
+                )
                 text_part_started = True
 
             full_text += text_delta
-            yield _sse("response.output_text.delta", {
-                "type": "response.output_text.delta",
-                "item_id": msg_id,
-                "output_index": text_output_index,
-                "content_index": content_index,
-                "delta": text_delta,
-            })
+            yield _sse(
+                "response.output_text.delta",
+                {
+                    "type": "response.output_text.delta",
+                    "item_id": msg_id,
+                    "output_index": text_output_index,
+                    "content_index": content_index,
+                    "delta": text_delta,
+                },
+            )
 
         # --- Tool calls ---
         for tc_delta in delta.get("tool_calls") or []:
@@ -252,78 +270,99 @@ async def _stream_responses(
                     "arguments": "",
                     "output_index": out_idx,
                 }
-                yield _sse("response.output_item.added", {
-                    "type": "response.output_item.added",
-                    "output_index": out_idx,
-                    "item": {
-                        "type": "function_call",
-                        "id": call_id,
-                        "call_id": call_id,
-                        "name": "",
-                        "arguments": "",
+                yield _sse(
+                    "response.output_item.added",
+                    {
+                        "type": "response.output_item.added",
+                        "output_index": out_idx,
+                        "item": {
+                            "type": "function_call",
+                            "id": call_id,
+                            "call_id": call_id,
+                            "name": "",
+                            "arguments": "",
+                        },
                     },
-                })
+                )
 
             func = tc_delta.get("function", {})
             if func.get("name"):
                 tool_calls[tc_idx]["name"] += func["name"]
             if func.get("arguments"):
                 tool_calls[tc_idx]["arguments"] += func["arguments"]
-                yield _sse("response.function_call_arguments.delta", {
-                    "type": "response.function_call_arguments.delta",
-                    "item_id": tool_calls[tc_idx]["id"],
-                    "output_index": tool_calls[tc_idx]["output_index"],
-                    "delta": func["arguments"],
-                })
+                yield _sse(
+                    "response.function_call_arguments.delta",
+                    {
+                        "type": "response.function_call_arguments.delta",
+                        "item_id": tool_calls[tc_idx]["id"],
+                        "output_index": tool_calls[tc_idx]["output_index"],
+                        "delta": func["arguments"],
+                    },
+                )
 
     # --- Finalize text ---
     if text_part_started and text_output_index is not None:
-        yield _sse("response.output_text.done", {
-            "type": "response.output_text.done",
-            "item_id": msg_id,
-            "output_index": text_output_index,
-            "content_index": content_index,
-            "text": full_text,
-        })
-        yield _sse("response.content_part.done", {
-            "type": "response.content_part.done",
-            "item_id": msg_id,
-            "output_index": text_output_index,
-            "content_index": content_index,
-            "part": {"type": "output_text", "text": full_text},
-        })
-        yield _sse("response.output_item.done", {
-            "type": "response.output_item.done",
-            "output_index": text_output_index,
-            "item": {
-                "type": "message",
-                "id": msg_id,
-                "status": "completed",
-                "role": "assistant",
-                "content": [{"type": "output_text", "text": full_text}],
+        yield _sse(
+            "response.output_text.done",
+            {
+                "type": "response.output_text.done",
+                "item_id": msg_id,
+                "output_index": text_output_index,
+                "content_index": content_index,
+                "text": full_text,
             },
-        })
+        )
+        yield _sse(
+            "response.content_part.done",
+            {
+                "type": "response.content_part.done",
+                "item_id": msg_id,
+                "output_index": text_output_index,
+                "content_index": content_index,
+                "part": {"type": "output_text", "text": full_text},
+            },
+        )
+        yield _sse(
+            "response.output_item.done",
+            {
+                "type": "response.output_item.done",
+                "output_index": text_output_index,
+                "item": {
+                    "type": "message",
+                    "id": msg_id,
+                    "status": "completed",
+                    "role": "assistant",
+                    "content": [{"type": "output_text", "text": full_text}],
+                },
+            },
+        )
 
     # --- Finalize tool calls ---
     for tc in tool_calls.values():
-        yield _sse("response.function_call_arguments.done", {
-            "type": "response.function_call_arguments.done",
-            "item_id": tc["id"],
-            "output_index": tc["output_index"],
-            "arguments": tc["arguments"],
-        })
-        yield _sse("response.output_item.done", {
-            "type": "response.output_item.done",
-            "output_index": tc["output_index"],
-            "item": {
-                "type": "function_call",
-                "id": tc["id"],
-                "call_id": tc["id"],
-                "name": tc["name"],
+        yield _sse(
+            "response.function_call_arguments.done",
+            {
+                "type": "response.function_call_arguments.done",
+                "item_id": tc["id"],
+                "output_index": tc["output_index"],
                 "arguments": tc["arguments"],
-                "status": "completed",
             },
-        })
+        )
+        yield _sse(
+            "response.output_item.done",
+            {
+                "type": "response.output_item.done",
+                "output_index": tc["output_index"],
+                "item": {
+                    "type": "function_call",
+                    "id": tc["id"],
+                    "call_id": tc["id"],
+                    "name": tc["name"],
+                    "arguments": tc["arguments"],
+                    "status": "completed",
+                },
+            },
+        )
 
     # --- Build final output list ---
     output_items = {}
@@ -346,17 +385,20 @@ async def _stream_responses(
         }
     output_list = [output_items[i] for i in sorted(output_items)]
 
-    yield _sse("response.completed", {
-        "type": "response.completed",
-        "response": {
-            "id": response_id,
-            "object": "response",
-            "created_at": created_at,
-            "status": "completed",
-            "model": model_name,
-            "output": output_list,
+    yield _sse(
+        "response.completed",
+        {
+            "type": "response.completed",
+            "response": {
+                "id": response_id,
+                "object": "response",
+                "created_at": created_at,
+                "status": "completed",
+                "model": model_name,
+                "output": output_list,
+            },
         },
-    })
+    )
 
     yield "data: [DONE]\n\n"
 
@@ -423,24 +465,28 @@ async def create_response(request: dict = Body(...)):
         msg = result.choices[0].message
         content = msg.content or ""
         for tc in msg.tool_calls or []:
-            tool_calls_out.append({
-                "type": "function_call",
-                "id": tc.id,
-                "call_id": tc.id,
-                "name": tc.function.name,
-                "arguments": tc.function.arguments,
-                "status": "completed",
-            })
+            tool_calls_out.append(
+                {
+                    "type": "function_call",
+                    "id": tc.id,
+                    "call_id": tc.id,
+                    "name": tc.function.name,
+                    "arguments": tc.function.arguments,
+                    "status": "completed",
+                }
+            )
 
     output = []
     if content:
-        output.append({
-            "type": "message",
-            "id": msg_id,
-            "status": "completed",
-            "role": "assistant",
-            "content": [{"type": "output_text", "text": content}],
-        })
+        output.append(
+            {
+                "type": "message",
+                "id": msg_id,
+                "status": "completed",
+                "role": "assistant",
+                "content": [{"type": "output_text", "text": content}],
+            }
+        )
     output.extend(tool_calls_out)
 
     usage = {}

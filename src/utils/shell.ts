@@ -28,7 +28,8 @@ export function detectShellRc(): string | null {
   const shell = process.env.SHELL ?? '';
   const candidates: string[] = [];
   if (shell.includes('zsh')) candidates.push(join(HOME, '.zshrc'));
-  else if (shell.includes('bash')) candidates.push(join(HOME, '.bashrc'), join(HOME, '.bash_profile'));
+  else if (shell.includes('bash'))
+    candidates.push(join(HOME, '.bashrc'), join(HOME, '.bash_profile'));
   else if (shell.includes('fish')) candidates.push(join(HOME, '.config', 'fish', 'config.fish'));
   return candidates.find(existsSync) ?? null;
 }

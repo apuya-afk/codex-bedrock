@@ -25,8 +25,12 @@ export async function setup(): Promise<void> {
   ]);
 
   const missing: string[] = [];
-  if (!hasAws) missing.push('  • AWS CLI  → https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html');
-  if (!hasCodex) missing.push('  • Codex CLI  → brew install codex  or  npm install -g @openai/codex');
+  if (!hasAws)
+    missing.push(
+      '  • AWS CLI  → https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html',
+    );
+  if (!hasCodex)
+    missing.push('  • Codex CLI  → brew install codex  or  npm install -g @openai/codex');
   if (!python) missing.push('  • Python 3.11+  → https://python.org');
 
   if (missing.length) {
@@ -122,7 +126,11 @@ export async function setup(): Promise<void> {
     injectShellIntegration(rcFile, config);
     shellSpinner.succeed(`Shell integration added to ${rcFile}`);
   } else {
-    console.log(chalk.yellow('⚠  Could not detect shell RC file — add shell integration manually (see README)'));
+    console.log(
+      chalk.yellow(
+        '⚠  Could not detect shell RC file — add shell integration manually (see README)',
+      ),
+    );
   }
 
   console.log(chalk.green.bold('\n✅ Setup complete!\n'));

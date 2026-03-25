@@ -55,10 +55,15 @@ export async function resolvePython(): Promise<string> {
     try {
       const { stdout } = await execa(cmd, ['--version']);
       const match = stdout.match(/Python (\d+)\.(\d+)/);
-      if (match && (parseInt(match[1]) > 3 || (parseInt(match[1]) === 3 && parseInt(match[2]) >= 11))) {
+      if (
+        match &&
+        (parseInt(match[1]) > 3 || (parseInt(match[1]) === 3 && parseInt(match[2]) >= 11))
+      ) {
         return cmd;
       }
-    } catch { /* try next */ }
+    } catch {
+      /* try next */
+    }
   }
   throw new Error('Python 3.11+ is required. Install it from https://python.org');
 }

@@ -14,7 +14,9 @@ program
 
 program
   .command('setup')
-  .description('Interactive one-time setup: installs proxy, configures Codex, adds shell integration')
+  .description(
+    'Interactive one-time setup: installs proxy, configures Codex, adds shell integration',
+  )
   .action(setup);
 
 program
@@ -24,14 +26,8 @@ program
   .option('-r, --region <region>', 'AWS region')
   .action(start);
 
-program
-  .command('stop')
-  .description('Stop the running proxy')
-  .action(stop);
+program.command('stop').description('Stop the running proxy').action(stop);
 
-program
-  .command('status')
-  .description('Show proxy status')
-  .action(status);
+program.command('status').description('Show proxy status').action(status);
 
 program.parse();

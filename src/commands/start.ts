@@ -28,7 +28,15 @@ export async function start(options: StartOptions): Promise<void> {
   const uvicorn = `${VENV_DIR}/bin/uvicorn`;
   const proc = execa(
     uvicorn,
-    ['codex_bedrock.app:app', '--host', '127.0.0.1', '--port', String(config.port), '--ws', 'websockets'],
+    [
+      'codex_bedrock.app:app',
+      '--host',
+      '127.0.0.1',
+      '--port',
+      String(config.port),
+      '--ws',
+      'websockets',
+    ],
     { env: buildEnv(config), stdio: 'inherit' },
   );
 
